@@ -254,6 +254,8 @@ def build_graph(data, forced_edges=None, null_edges=None, interest_func='l0',
 
     Returns
     -------
+    graph : networkx.Graph
+        Connected graph to be factored.
     """
     N = len(data)
     seniority = index_seniority(data, 6)
@@ -303,8 +305,7 @@ def build_graph(data, forced_edges=None, null_edges=None, interest_func='l0',
                 weights[-1] = 0.0
 
             if forced_edges[i, j]:
-                weights = [2.0**32]
-                # print row_i[1], row_j[1]
+                weights = [2.0 ** 32]
             graph.add_weighted_edges_from([(i, j, combination_func(weights))])
 
     return graph

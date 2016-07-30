@@ -1,1 +1,33 @@
-{}
+{
+
+    "definitions": {
+
+        "Participant": {
+            "type": "object",
+            "title": "Participant Record",
+            "properties": {
+                "topics": {
+                    "type": "array",
+                    "title": "Topics of Expertise",
+                    "description": "Areas of strength for a participant.",
+                    "items": { "type": "string" }
+                },
+                "name": { "type": "string"},
+                "country": { "type": "string"},
+                "affiliation": { "type": "string"},
+                "interests": {
+                    "type": "array",
+                    "title": "Interests",
+                    "description": "Areas of interest / learning.",
+                    "items": { "type": "string" }
+                },
+                "seniority" : { "type": "number"}
+            }
+        }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "array",
+    "title": "Participants",
+    "description": "Records for each participant.",
+    "items": { "$ref": "#/definitions/Participant" }
+}
