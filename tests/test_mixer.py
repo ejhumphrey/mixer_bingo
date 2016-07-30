@@ -49,3 +49,10 @@ def test_build_graph_null_edge(sample_data):
         sample_data, forced_edges=None, null_edges=[(0, 1)],
         interest_func='l0', seniority_func='l0', combination_func=np.sum)
     assert graph is not None
+
+
+def test_select_matches(sample_data):
+    matches = mixer.select_matches(
+        sample_data, k_matches=1, forced_edges=None, null_edges=None,
+        interest_func='l0', seniority_func='l0', combination_func=np.sum)
+    assert len(matches) == 4

@@ -204,8 +204,10 @@ def harmonic_mean(values):
     return np.power(np.prod(values), 1.0 / len(values))
 
 
-def select_matches(data, k_matches):
-    """writeme
+def select_matches(records, k_matches=5, forced_edges=None, null_edges=None,
+                   interest_func='l0', seniority_func='l0',
+                   combination_func=np.sum, seed=None):
+    """Pick affinity matches, and back-fill randomly if under-populated.
 
     Parameters
     ----------
@@ -215,36 +217,36 @@ def select_matches(data, k_matches):
     -------
     y
     """
-    matches = dict()
-    null_edges = np.eye(len(data), dtype=bool)
-    forced_edges = np.zeros_like(null_edges, dtype=bool)
-    forced_edges[13, 60] = True
-    forced_edges[60, 13] = True
-    forced_edges[35, 65] = True
-    forced_edges[65, 35] = True
+    null_edges = ([] if null_edges is None
+                  else [tuple(v) for v in null_edges])
+    forced_edges = ([] if forced_edges is None
+                    else [tuple(v) for v in forced_edges])
+
+    matches = {i: set() for i in range(len(records))}
 
     for k in range(k_matches):
         graph = build_graph(
-            data, null_edges=null_edges, forced_edges=forced_edges,
+            records, null_edges=null_edges, forced_edges=forced_edges,
             seniority_func='quadratic', interest_func='mean',
             combination_func=np.mean)
         forced_edges = None
         links = nx.max_weight_matching(graph)
         for row, col in links.items():
-            null_edges[row, col] = True
-            if row not in matches:
-                matches[row] = list()
-            matches[row].append(col)
+            null_edges += (row, col)
+            matches[row].add(col)
 
     catch_count = 0
+    rng = np.random.RandomState(seed=seed)
     for row in matches:
+        possible_matches = set(range(len(records)))
+        possible_matches = possible_matches.difference(matches[row])
         while len(matches[row]) != k_matches:
-            col = categorical_sample(1.0 - null_edges[row])
-            matches[row].append(col)
-            null_edges[row, col] = True
+            col = rng.choice(np.asarray(possible_matches))
+            matches[row].add(col)
+            null_edges += [(row, col)]
             catch_count += 1
 
-    print("backfilled %d" % catch_count)
+    logger.debug("backfilled %d" % catch_count)
     return matches
 
 
