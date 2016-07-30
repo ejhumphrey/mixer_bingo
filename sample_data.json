@@ -1,0 +1,34 @@
+[
+    {
+        "name": "Ringo",
+        "country": "UK",
+        "affiliation": "Queen Mary",
+        "topics": [ "drums", "looking sad" ],
+        "interests": [ "fishing" ],
+        "seniority": 4
+    },
+    {
+        "name": "Kurt",
+        "country": "USA",
+        "affiliation": "University of Washington",
+        "topics": [ "guitar" ],
+        "interests": [ "knitting", "sweaters" ],
+        "seniority": 3
+    },
+    {
+        "name": "Katy",
+        "country": "USA",
+        "affiliation": "UC Irvine",
+        "topics": [ "friday", "tigers" ],
+        "interests": [ "sharks", "NFL" ],
+        "seniority": 1
+    },
+    {
+        "name": "Shakira",
+        "country": "Colombia",
+        "affiliation": "University of Bogota",
+        "topics": [ "dancing", "vocals" ],
+        "interests": [ "motorcycles" ],
+        "seniority": 2
+    }
+]

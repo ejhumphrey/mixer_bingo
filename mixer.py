@@ -2,13 +2,46 @@ from __future__ import print_function
 
 import argparse
 import csv
+import json
+import jsonschema
 import logging
 import numpy as np
 import networkx as nx
+import os
 import random
 import sys
 
 logger = logging.getLogger(name=__file__)
+
+
+def _load_schema():
+    schema_file = os.path.join(os.path.dirname(__file__),
+                               'participant_schema.json')
+    return json.load(open(schema_file))
+
+__SCHEMA__ = _load_schema()
+
+
+def validate(participant_data):
+    """Check that a number of records conforms to the expected format.
+
+    Parameters
+    ----------
+    participant_data : array_like of dicts
+        Collection of user records to validate.
+
+    Returns
+    -------
+    is_valid : bool
+        True if the provided data validates.
+    """
+    is_valid = True
+    try:
+        jsonschema.validate(participant_data, __SCHEMA__)
+    except jsonschema.ValidationError as failed:
+        logger.debug("Schema Validation Failed: {}".format(failed))
+        is_valid = False
+    return is_valid
 
 
 def read_responses(csv_file):
