@@ -1,13 +1,13 @@
 from __future__ import print_function
 
 import argparse
-import csv
 import json
 import jsonschema
 import logging
 import numpy as np
 import networkx as nx
 import os
+import pandas as pd
 import random
 import sys
 
@@ -94,37 +94,6 @@ def items_to_bitmap(records, enum_map=None):
     return bitmap, enum_map if return_mapping else bitmap
 
 
-def index_seniority(data, col_idx=6):
-    """writeme
-
-    Parameters
-    ----------
-    x
-
-    Returns
-    -------
-    y
-    """
-    tiers = list(set([_[col_idx] for _ in data]))
-    tiers.sort()
-    enum_map = dict([(k, n) for n, k in enumerate(tiers)])
-    return [enum_map[row[col_idx]] for row in data]
-
-
-def index_group(data, col_idx=8):
-    """writeme
-
-    Parameters
-    ----------
-    x
-
-    Returns
-    -------
-    y
-    """
-    return np.array([int(row[col_idx]) for row in data])
-
-
 def categorical_sample(pdf):
     """Randomly select a categorical index of a given PDF.
 
@@ -140,14 +109,27 @@ def categorical_sample(pdf):
     return int(np.random.multinomial(1, pdf).nonzero()[0])
 
 
-def build_graph(data, forced_edges=None, null_edges=None, interest_func='l0',
-                seniority_func='l0', combination_func=np.sum):
+WEIGHTING_FUNCTIONS = {
+    'l0': lambda x: float(np.sum(x) > 0),
+    'l1': lambda x: float(np.sum(x)),
+    'mean': lambda x: float(np.mean(x)),
+    'null': 0.0,
+    'euclidean': lambda x: np.sqrt(x),
+    'norm_euclidean': lambda x: np.sqrt(x) / 3.0,
+    'quadratic': lambda x: x,
+    'norm_quadratic': lambda x: x / 9.0
+}
+
+
+def build_graph(records, forced_edges=None, null_edges=None,
+                interest_func='l0', seniority_func='l0',
+                combination_func=np.sum):
     """writeme
 
     Parameters
     ----------
-    data: list
-        Rows from the CSV file, minus the header.
+    data: pd.DataFrame
+        Loaded participant records
 
     forced_edges: np.ndarray, or None
         One-hot assignment matrix; no row or column can sum to more than one.
@@ -169,55 +151,40 @@ def build_graph(data, forced_edges=None, null_edges=None, interest_func='l0',
     graph : networkx.Graph
         Connected graph to be factored.
     """
-    N = len(data)
-    seniority = index_seniority(data, 6)
-    interests_to_idx = enumerate_interests(data, 7)
-    interests = interest_bitmap(data, interests_to_idx, 7)
+    if not isinstance(records, pd.DataFrame):
+        records = pd.DataFrame(records)
 
-    if null_edges is None:
-        null_edges = np.zeros([N] * 2, dtype=bool)
+    interest_bitmap, interest_enum = items_to_bitmap(records.interests)
 
-    null_edges[np.eye(N, dtype=bool)] = True
-
-    if forced_edges is None:
-        forced_edges = np.zeros([N] * 2, dtype=bool)
+    # Coerce null / forced edges for datatype compliance.
+    null_edges = ([] if null_edges is None
+                  else [tuple(v) for v in null_edges])
+    forced_edges = ([] if forced_edges is None
+                    else [tuple(v) for v in forced_edges])
 
     graph = nx.Graph()
-    for i, row_i in enumerate(data):
-        for j, row_j in enumerate(data):
+    for i, row_i in records.iterrows():
+        for j, row_j in records.iterrows():
             # Skip self, shared affiliations, or same grouping
-            if row_i[3] == row_j[3] or null_edges[i, j]:
+            skip_conditions = [i == j,
+                               (i, j) in null_edges,
+                               (j, i) in null_edges,
+                               row_i.affiliation == row_j.affiliation]
+            if any(skip_conditions):
                 continue
 
-            weights = []
             # Interest weighting
-            weights += [(interests[i] * interests[j])]
-            if interest_func == 'l0':
-                weights[-1] = float(weights[-1].sum() > 0)
-            elif interest_func == 'l1':
-                weights[-1] = float(weights[-1].sum())
-            elif interest_func == 'mean':
-                weights[-1] = float(weights[-1].sum()) / interests.mean()
-            else:
-                weights[-1] = 0.0
+            interest_weight = WEIGHTING_FUNCTIONS[interest_func](
+                interest_bitmap[i] * interest_bitmap[j])
 
             # Seniority weighting
-            weights += [(seniority[i] - seniority[j]) ** 2.0]
-            if seniority_func == 'l0':
-                weights[-1] = float(weights[-1] > 0)
-            elif seniority_func == 'euclidean':
-                weights[-1] = np.sqrt(weights[-1])
-            elif seniority_func == 'norm_euclidean':
-                weights[-1] = np.sqrt(weights[-1]) / 3.0
-            elif seniority_func == 'quadratic':
-                weights[-1] = weights[-1]
-            elif seniority_func == 'norm_quadratic':
-                weights[-1] = weights[-1] / 9.0
-            else:
-                weights[-1] = 0.0
+            seniority_weight = WEIGHTING_FUNCTIONS[seniority_func](
+                (row_i.seniority - row_j.seniority) ** 2.0)
 
-            if forced_edges[i, j]:
+            if (i, j) in forced_edges or (j, i) in forced_edges:
                 weights = [2.0 ** 32]
+            else:
+                weights = [interest_weight, seniority_weight]
             graph.add_weighted_edges_from([(i, j, combination_func(weights))])
 
     return graph

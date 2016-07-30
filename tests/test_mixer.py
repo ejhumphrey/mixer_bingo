@@ -28,3 +28,24 @@ def test_items_to_bitmap():
                          [True, False, False],
                          [True, True, True]])
     np.testing.assert_array_equal(exp_bmap, bmap)
+
+
+def test_build_graph_basic(sample_data):
+    graph = mixer.build_graph(
+        sample_data, forced_edges=None, null_edges=None, interest_func='l0',
+        seniority_func='l0', combination_func=np.sum)
+    assert graph is not None
+
+
+def test_build_graph_forced_edge(sample_data):
+    graph = mixer.build_graph(
+        sample_data, forced_edges=[(0, 1)], null_edges=None,
+        interest_func='l0', seniority_func='l0', combination_func=np.sum)
+    assert graph is not None
+
+
+def test_build_graph_null_edge(sample_data):
+    graph = mixer.build_graph(
+        sample_data, forced_edges=None, null_edges=[(0, 1)],
+        interest_func='l0', seniority_func='l0', combination_func=np.sum)
+    assert graph is not None

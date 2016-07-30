@@ -4,7 +4,7 @@
         "country": "UK",
         "affiliation": "Queen Mary",
         "topics": [ "drums", "looking sad" ],
-        "interests": [ "fishing" ],
+        "interests": [ "fishing", "motorcycles" ],
         "seniority": 4
     },
     {
@@ -12,7 +12,7 @@
         "country": "USA",
         "affiliation": "University of Washington",
         "topics": [ "guitar" ],
-        "interests": [ "knitting", "sweaters" ],
+        "interests": [ "sharks", "sweaters" ],
         "seniority": 3
     },
     {
