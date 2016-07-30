@@ -44,142 +44,54 @@ def validate(participant_data):
     return is_valid
 
 
-def read_responses(csv_file):
-    """writeme
+def tokenize(records):
+    """Create a token mapping from objects to integers.
 
     Parameters
     ----------
-    x
+    records : array_like of iterables.
+        Collection of nested arrays.
 
     Returns
     -------
-    y
+    enum_map : dict
+        Enumeration map of objects (any hashable) to tokens (int).
     """
-    reader = csv.reader(open(csv_file))
-    hdr = reader.next()
-    rows = [_ for _ in reader]
-    return hdr, rows
+    unique_items = set(i for row in records for i in row)
+    unique_items = sorted(list(unique_items))
+    return dict([(k, n) for n, k in enumerate(unique_items)])
 
 
-def parse_interests(value):
-    """writeme
+def items_to_bitmap(records, enum_map=None):
+    """Turn a collection of sparse items into a binary bitmap.
 
     Parameters
     ----------
-    x
+    records : iterable of iterables, len=n
+        Items to represent as a matrix.
+
+    enum_map : dict, or None, len=k
+        Token mapping items to ints; if None, one will be generated and
+        returned.
 
     Returns
     -------
-    y
+    bitmap : np.ndarray, shape=(n, k)
+        Active items.
+
+    enum_map : dict
+        Mapping of items to integers, if one is not given.
     """
-    return [_.strip() for _ in value.split(",")]
+    return_mapping = False
+    if enum_map is None:
+        enum_map = tokenize(records)
+        return_mapping = True
 
-
-def get_topics(data):
-    """writeme
-
-    Parameters
-    ----------
-    x
-
-    Returns
-    -------
-    y
-    """
-    return filter(None, enumerate_interests(data).keys())
-
-
-def get_education(data):
-    """writeme
-
-    Parameters
-    ----------
-    x
-
-    Returns
-    -------
-    y
-    """
-    levels = set()
-    for row in data:
-        levels.add(row[4])
-    levels = list(levels)
-    levels.sort()
-    return levels[:-1]
-
-
-def get_countries(data):
-    """writeme
-
-    Parameters
-    ----------
-    x
-
-    Returns
-    -------
-    y
-    """
-    countries = set()
-    for row in data:
-        countries.add(row[5].split("/")[-1].strip())
-    return list(countries)
-
-
-def get_affilations(data):
-    """writeme
-
-    Parameters
-    ----------
-    x
-
-    Returns
-    -------
-    y
-    """
-    affilations = set()
-    for row in data:
-        for aff in row[3].split("/"):
-            affilations.add(aff.strip())
-    return list(affilations)
-
-
-def enumerate_interests(data, col_idx=7):
-    """writeme
-
-    Parameters
-    ----------
-    x
-
-    Returns
-    -------
-    y
-    """
-    interests = set()
-    for row in data:
-        for i in parse_interests(row[col_idx]):
-            interests.add(i)
-    return dict([(k, n) for n, k in enumerate(interests)])
-
-
-def interest_bitmap(data, enum_map, col_idx=7):
-    """writeme
-
-    Parameters
-    ----------
-    x
-
-    Returns
-    -------
-    y
-    """
-    N = len(data)
-    K = len(enum_map)
-
-    bitmap = np.zeros([N, K], dtype=bool)
-    for idx, row in enumerate(data):
-        for i in parse_interests(row[col_idx]):
+    bitmap = np.zeros([len(records), len(enum_map)], dtype=bool)
+    for idx, row in enumerate(records):
+        for i in row:
             bitmap[idx, enum_map[i]] = True
-    return bitmap
+    return bitmap, enum_map if return_mapping else bitmap
 
 
 def index_seniority(data, col_idx=6):
