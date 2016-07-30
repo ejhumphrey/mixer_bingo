@@ -1,12 +1,27 @@
 from __future__ import print_function
 
+import argparse
 import csv
+import logging
 import numpy as np
 import networkx as nx
 import random
+import sys
+
+logger = logging.getLogger(name=__file__)
 
 
 def read_responses(csv_file):
+    """writeme
+
+    Parameters
+    ----------
+    x
+
+    Returns
+    -------
+    y
+    """
     reader = csv.reader(open(csv_file))
     hdr = reader.next()
     rows = [_ for _ in reader]
@@ -14,14 +29,44 @@ def read_responses(csv_file):
 
 
 def parse_interests(value):
+    """writeme
+
+    Parameters
+    ----------
+    x
+
+    Returns
+    -------
+    y
+    """
     return [_.strip() for _ in value.split(",")]
 
 
 def get_topics(data):
+    """writeme
+
+    Parameters
+    ----------
+    x
+
+    Returns
+    -------
+    y
+    """
     return filter(None, enumerate_interests(data).keys())
 
 
 def get_education(data):
+    """writeme
+
+    Parameters
+    ----------
+    x
+
+    Returns
+    -------
+    y
+    """
     levels = set()
     for row in data:
         levels.add(row[4])
@@ -31,6 +76,16 @@ def get_education(data):
 
 
 def get_countries(data):
+    """writeme
+
+    Parameters
+    ----------
+    x
+
+    Returns
+    -------
+    y
+    """
     countries = set()
     for row in data:
         countries.add(row[5].split("/")[-1].strip())
@@ -38,6 +93,16 @@ def get_countries(data):
 
 
 def get_affilations(data):
+    """writeme
+
+    Parameters
+    ----------
+    x
+
+    Returns
+    -------
+    y
+    """
     affilations = set()
     for row in data:
         for aff in row[3].split("/"):
@@ -46,6 +111,16 @@ def get_affilations(data):
 
 
 def enumerate_interests(data, col_idx=7):
+    """writeme
+
+    Parameters
+    ----------
+    x
+
+    Returns
+    -------
+    y
+    """
     interests = set()
     for row in data:
         for i in parse_interests(row[col_idx]):
@@ -54,6 +129,16 @@ def enumerate_interests(data, col_idx=7):
 
 
 def interest_bitmap(data, enum_map, col_idx=7):
+    """writeme
+
+    Parameters
+    ----------
+    x
+
+    Returns
+    -------
+    y
+    """
     N = len(data)
     K = len(enum_map)
 
@@ -65,6 +150,16 @@ def interest_bitmap(data, enum_map, col_idx=7):
 
 
 def index_seniority(data, col_idx=6):
+    """writeme
+
+    Parameters
+    ----------
+    x
+
+    Returns
+    -------
+    y
+    """
     tiers = list(set([_[col_idx] for _ in data]))
     tiers.sort()
     enum_map = dict([(k, n) for n, k in enumerate(tiers)])
@@ -72,32 +167,60 @@ def index_seniority(data, col_idx=6):
 
 
 def index_group(data, col_idx=8):
+    """writeme
+
+    Parameters
+    ----------
+    x
+
+    Returns
+    -------
+    y
+    """
     return np.array([int(row[col_idx]) for row in data])
 
 
 def categorical_sample(pdf):
-    """Randomly select a categorical index of a given PDF."""
+    """Randomly select a categorical index of a given PDF.
+
+    Parameters
+    ----------
+    x
+
+    Returns
+    -------
+    y
+    """
     pdf = pdf / pdf.sum()
     return int(np.random.multinomial(1, pdf).nonzero()[0])
 
 
 def build_graph(data, forced_edges=None, null_edges=None, interest_func='l0',
                 seniority_func='l0', combination_func=np.sum):
-    """
+    """writeme
+
     Parameters
     ----------
     data: list
         Rows from the CSV file, minus the header.
+
     forced_edges: np.ndarray, or None
         One-hot assignment matrix; no row or column can sum to more than one.
+
     null_edges: np.ndarray, or None
         Matches to set to zero.
+
     interest_func: str
         'l1', 'l0'
+
     seniority_func: str
         'l1', 'l0'
+
     combination_func: function
         Numpy functions, e.g. prod, sum, max.
+
+    Returns
+    -------
     """
     N = len(data)
     seniority = index_seniority(data, 6)
@@ -155,10 +278,30 @@ def build_graph(data, forced_edges=None, null_edges=None, interest_func='l0',
 
 
 def harmonic_mean(values):
+    """writeme
+
+    Parameters
+    ----------
+    x
+
+    Returns
+    -------
+    y
+    """
     return np.power(np.prod(values), 1.0 / len(values))
 
 
 def select_matches(data, k_matches):
+    """writeme
+
+    Parameters
+    ----------
+    x
+
+    Returns
+    -------
+    y
+    """
     matches = dict()
     null_edges = np.eye(len(data), dtype=bool)
     forced_edges = np.zeros_like(null_edges, dtype=bool)
@@ -193,6 +336,16 @@ def select_matches(data, k_matches):
 
 
 def select_topic(row_a, row_b):
+    """writeme
+
+    Parameters
+    ----------
+    x
+
+    Returns
+    -------
+    y
+    """
     topics_a = parse_interests(row_a[7])
     topics_b = parse_interests(row_b[7])
 
@@ -200,14 +353,14 @@ def select_topic(row_a, row_b):
     if topics:
         return topics[categorical_sample(np.ones(len(topics)))]
 
-text_1fmts = [
+TEXT_FMTS = [
     ("Find someone from %s.", 'affiliation'),
     ("Find someone currently located in %s.", 'country'),
     ("Find someone who is an expert on %s", 'topics'),
     ("Find someone in academia at the %s level", 'education')]
 
 
-text_fmts = [
+TEXT = [
     "Find someone who works in industry",
     "Introduce someone to someone else",
     "Help someone solve a square",
@@ -222,7 +375,7 @@ def generate_text(rows, target_idx, matches, num_outputs=24):
     for match_idx in matches[target_idx]:
         outputs.append("Talk to %s" % rows[match_idx][1])
 
-    outputs.extend(text_fmts)
+    outputs.extend(TEXT)
     categories = {
         'affiliation': get_affilations(rows),
         'education': get_education(rows),
@@ -231,7 +384,7 @@ def generate_text(rows, target_idx, matches, num_outputs=24):
     }
 
     while len(outputs) < num_outputs:
-        fmt, key = random.choice(text_1fmts)
+        fmt, key = random.choice(TEXT_FMTS)
         value = random.choice(categories[key])
         outputs.append(fmt % value)
 
@@ -239,7 +392,16 @@ def generate_text(rows, target_idx, matches, num_outputs=24):
 
 
 def make_card(name, contents, outfile):
+    """writeme
 
+    Parameters
+    ----------
+    x
+
+    Returns
+    -------
+    y
+    """
     tex_lines = []
 
     tex_lines.append(r'\documentclass[10pt, a4paper]{article}')
@@ -322,3 +484,18 @@ def make_card(name, contents, outfile):
     with open(outfile, 'w') as f:
         for line in tex_lines:
             f.write("%s\n" % line)
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('a',
+                        help='writeme')
+    parser.add_argument('--b', type=str,
+                        default='apple',
+                        help='writeme')
+    parser.add_argument('--verbose', action='store_true',
+                        help='Print progress to the console.')
+    args = parser.parse_args()
+    sys.exit(0)
