@@ -45,22 +45,34 @@ def make_card(name, contents, outfile):
     tex_lines.append(r'(shi)')
     tex_lines.append(r'{')
 
-    tex_lines.append(r"%s & %s & %s & %s & %s\\" % (c[0], c[1], c[2], c[3], c[4]))
-    tex_lines.append(r"%s & %s & %s & %s & %s\\" % (c[5], c[6], c[7], c[8], c[9]))
-    tex_lines.append(r"%s & %s & %s & %s & %s\\" % (c[10], c[11], c[12], c[13], c[14]))
-    tex_lines.append(r"%s & %s & %s & %s & %s\\" % (c[15], c[16], c[17], c[18], c[19]))
-    tex_lines.append(r"%s & %s & %s & %s & %s\\" % (c[20], c[21], c[22], c[23], c[24]))
+    tex_lines.append(
+        r"%s & %s & %s & %s & %s\\" % (c[0], c[1], c[2], c[3], c[4]))
+    tex_lines.append(
+        r"%s & %s & %s & %s & %s\\" % (c[5], c[6], c[7], c[8], c[9]))
+    tex_lines.append(
+        r"%s & %s & %s & %s & %s\\" % (c[10], c[11], c[12], c[13], c[14]))
+    tex_lines.append(
+        r"%s & %s & %s & %s & %s\\" % (c[15], c[16], c[17], c[18], c[19]))
+    tex_lines.append(
+        r"%s & %s & %s & %s & %s\\" % (c[20], c[21], c[22], c[23], c[24]))
     tex_lines.append(r'};')
 
     tex_lines.append(r'\foreach \i in {1,2,3,4,5}')
-    tex_lines.append(r'\draw[line width=2pt] (shi-1-\i.north east) -- (shi-5-\i.south east);')
-    tex_lines.append(r'\foreach \i in {1,2,3,4,5}')
-    tex_lines.append(r'\draw[line width=2pt] (shi-1-\i.north west) -- (shi-5-\i.south west);')
+    tex_lines.append(
+        r'\draw[line width=2pt] (shi-1-\i.north east) -- (shi-5-\i.south east);')
+    tex_lines.append(
+        r'\foreach \i in {1,2,3,4,5}')
+    tex_lines.append(
+        r'\draw[line width=2pt] (shi-1-\i.north west) -- (shi-5-\i.south west);')
 
-    tex_lines.append(r'\foreach \i in {1,2,3,4,5}')
-    tex_lines.append(r'\draw[line width=2pt] (shi-\i-1.north west) -- (shi-\i-5.north east);')
-    tex_lines.append(r'\foreach \i in {1,2,3,4,5}')
-    tex_lines.append(r'\draw[line width=2pt] (shi-\i-1.south west) -- (shi-\i-5.south east);')
+    tex_lines.append(
+        r'\foreach \i in {1,2,3,4,5}')
+    tex_lines.append(
+        r'\draw[line width=2pt] (shi-\i-1.north west) -- (shi-\i-5.north east);')
+    tex_lines.append(
+        r'\foreach \i in {1,2,3,4,5}')
+    tex_lines.append(
+        r'\draw[line width=2pt] (shi-\i-1.south west) -- (shi-\i-5.south east);')
 
     tex_lines.append(r'\end{tikzpicture}')
     tex_lines.append('')
